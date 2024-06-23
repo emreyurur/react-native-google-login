@@ -1,80 +1,24 @@
-import React, { useEffect } from 'react';
-import { SafeAreaView, StyleSheet, Button, Text, View } from 'react-native';
-import { GoogleSignin, statusCodes, User } from '@react-native-google-signin/google-signin';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Provider } from 'react-redux';
+import store from './redux/store';
+import 'react-native-get-random-values';
+import WelcomeScreen from './src/screens/WelcomeScreen';
 
-const App = () => {
-  const [userInfo, setUserInfo] = React.useState<User | null>(null);
 
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: '179307589523-acrusv8defhg2lq7n9sf6b81p43mippv.apps.googleusercontent.com', // Web client ID
-      offlineAccess: true, // if you want to access Google API on behalf of the user FROM YOUR SERVER
-      forceCodeForRefreshToken: true,
-    });
-  }, []);
+const Stack = createNativeStackNavigator();
 
-  const signIn = async () => {
-    try {
-      await GoogleSignin.hasPlayServices();
-      const userInfo = await GoogleSignin.signIn();
-      setUserInfo(userInfo);
-      console.log("Login succesfully!")
-    } catch (error: any) {
-      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
-        // user cancelled the login flow
-        console.log('User cancelled the login flow');
-      } else if (error.code === statusCodes.IN_PROGRESS) {
-        // operation (e.g. sign in) is in progress already
-        console.log('Operation is in progress already');
-      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-        // play services not available or outdated
-        console.log('Play services not available or outdated');
-      } else {
-        // some other error happened
-        console.log('Some other error happened', error);
-      }
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      await GoogleSignin.signOut();
-      setUserInfo(null); // Remove the user info
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
+const App: React.FC = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        {userInfo ? (
-          <View>
-            <Text style={styles.text}>Welcome, {userInfo.user.name}</Text>
-            <Button title="Sign Out" onPress={signOut} />
-          </View>
-        ) : (
-          <Button title="Sign In with Google" onPress={signIn} />
-        )}
-      </View>
-    </SafeAreaView>
+    <Provider store={store}>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </Provider>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 18,
-    marginBottom: 20,
-  },
-});
 
 export default App;
