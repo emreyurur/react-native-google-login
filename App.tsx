@@ -5,6 +5,7 @@ import { Provider } from 'react-redux';
 import store from './redux/store';
 import 'react-native-get-random-values';
 import WelcomeScreen from './src/screens/WelcomeScreen';
+import ProposalScreen from './src/screens/ProposalScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -15,6 +16,7 @@ const App: React.FC = () => {
       <NavigationContainer>
         <Stack.Navigator>
           <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
+          <Stack.Screen name="ProposalScreen" component={ProposalScreen}/>
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, StyleSheet, Button, Text, View, Image,TouchableOpacity } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, View, Image, TouchableOpacity } from 'react-native';
 import { GoogleSignin, statusCodes, User } from '@react-native-google-signin/google-signin';
+import { useNavigation } from '@react-navigation/native';
 
 const GoogleLogin: React.FC = () => {
   const [userInfo, setUserInfo] = useState<User | null>(null);
+  const navigation = useNavigation();
 
   useEffect(() => {
     GoogleSignin.configure({
@@ -19,6 +21,7 @@ const GoogleLogin: React.FC = () => {
       const userInfo = await GoogleSignin.signIn();
       setUserInfo(userInfo);
       console.log("Login successfully!");
+      navigation.navigate('ProposalScreen'); // Giriş başarılı olduğunda yönlendirme yap
     } catch (error: any) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
         // user cancelled the login flow
@@ -36,31 +39,15 @@ const GoogleLogin: React.FC = () => {
     }
   };
 
-  const signOut = async () => {
-    try {
-      await GoogleSignin.signOut();
-      setUserInfo(null); // Remove the user info
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {userInfo ? (
-          <View>
-            <Text style={styles.text}>Welcome, {userInfo.user.name}</Text>
-            <Button title="Sign Out" onPress={signOut} style={styles.button} />
+        <TouchableOpacity onPress={signIn} style={styles.button}>
+          <View style={styles.buttonContent}>
+            <Image source={require('../assets/googlelogo.png')} style={styles.icon} resizeMode="contain" />
+            <Text style={styles.buttonText}>Sign In with Google</Text>
           </View>
-        ) : (
-          <TouchableOpacity onPress={signIn} style={styles.button}>
-            <View style={styles.buttonContent}>
-              <Image source={require('../assets/googlelogo.png')} style={styles.icon} resizeMode="contain" />
-              <Text style={styles.buttonText}>Sign In with Google</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -78,7 +65,7 @@ const styles = StyleSheet.create({
     width: '100%', // Genişlik ayarı
   },
   button: {
-    width:300,
+    width: 300,
     height: 50,
     backgroundColor: '#fff', // Google renk örneği
     borderRadius: 10,
@@ -100,10 +87,6 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  text: {
-    fontSize: 18,
-    marginBottom: 20,
   },
 });
 

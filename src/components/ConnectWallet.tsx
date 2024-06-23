@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
   icon: {
     width: 30,
     height: 30,
-    marginRight: 10,
+    marginRight: 12,
   },
   buttonText: {
     color: 'white',
