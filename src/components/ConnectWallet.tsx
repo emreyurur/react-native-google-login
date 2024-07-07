@@ -1,61 +1,88 @@
-import React, { useEffect, useState } from 'react';
-import { Image, View, TouchableOpacity, Linking, StyleSheet, ImageRequireSource, Text } from 'react-native';
-import { useDispatch } from 'react-redux';
-import base58 from 'bs58';
-import nacl from 'tweetnacl';
-import 'react-native-get-random-values';
+import React, { useState } from 'react';
+import { View, TouchableOpacity, Image, StyleSheet, Text, Linking } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-interface ImagePressProps {
-  onPress: () => void;
-  image: ImageRequireSource;
+// Define the navigation prop type
+type RootStackParamList = {
+  ProposalScreen: { proposals: Proposal[] };
+};
+
+type ConnectWalletNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProposalScreen'>;
+
+interface Proposal {
+  proposal_uuid: string;
+  title: string;
+  description: string;
 }
 
 const ConnectWallet: React.FC = () => {
-  const [dappKeyPair, setDappKeyPair] = useState<nacl.BoxKeyPair | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  useEffect(() => {
-    const generateRandomKeyPair = () => {
-      try {
-        const newKeyPair = nacl.box.keyPair();
-        setDappKeyPair(newKeyPair);
-      } catch (error) {
-        console.error('Error generating random key pair:', error);
-      }
-    };
-
-    generateRandomKeyPair();
-  }, []);
+  const navigation = useNavigation<ConnectWalletNavigationProp>();
 
   const handleConnectPhantom = async () => {
-    if (dappKeyPair) {
-      const params = new URLSearchParams({
-        dapp_encryption_public_key: base58.encode(dappKeyPair.publicKey),
-        cluster: 'mainnet-beta', // or 'testnet'
-        app_url: 'https://phantom.app',
-        redirect_link: 'myapp://onConnect', // Make sure this matches your scheme
+    // Static public key to be sent
+    const staticPublicKey = 'Af139PJn2nuCBA7vJQeuZfZHskXogyuhZVFvD2dPBg5q';
+
+    // Open Phantom connection URL
+    const params = new URLSearchParams({
+      dapp_encryption_public_key: staticPublicKey,
+      cluster: 'mainnet-beta', // or 'testnet'
+      app_url: 'https://phantom.app',
+      redirect_link: 'myapp://onConnect', // Make sure this matches your scheme
+    });
+
+    const connectUrl = `phantom://v1/connect?${params.toString()}`;
+
+    try {
+      // Open the Phantom wallet connection URL
+      await Linking.openURL(connectUrl);
+
+      // Fetch proposals after sending the public key
+      fetchProposals(staticPublicKey);
+    } catch (error) {
+      console.error('Error connecting to Phantom or sending public key:', error);
+    }
+  };
+
+  const fetchProposals = async (publicKey: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch('https://6204-95-12-113-153.ngrok-free.app/mobile/getProposals?pubkey=2nKqT2P4DdH8Dr8hw8zHMgFgAnDXNYsDiB9hjCw9ZnEL', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${publicKey}`, // Include the public key in headers if needed
+        },
       });
 
-      const connectUrl = `phantom://v1/connect?${params.toString()}`;
+      if (response.ok) {
+        const data: Proposal[] = await response.json();
+        console.log('Proposals fetched successfully:', data);
 
-      try {
-        await Linking.openURL(connectUrl);
-      } catch (error) {
-        console.error('Error connecting to Phantom:', error);
+        // Navigate to ProposalScreen with fetched proposals
+        navigation.navigate('ProposalScreen', { proposals: data });
+      } else {
+        console.error('Failed to fetch proposals', response.statusText);
       }
+    } catch (error) {
+      console.error('Error fetching proposals:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        {dappKeyPair && (
-          <TouchableOpacity onPress={handleConnectPhantom} style={styles.button}>
-            <View style={styles.buttonContent}>
-              <Image source={require('../assets/phantomcircle.png')} style={styles.icon} resizeMode="contain" />
-              <Text style={styles.buttonText}>Connect Phantom</Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity onPress={handleConnectPhantom} style={styles.button}>
+          <View style={styles.buttonContent}>
+            <Image source={require('../assets/phantomcircle.png')} style={styles.icon} resizeMode="contain" />
+            <Text style={styles.buttonText}>Connect Phantom</Text>
+          </View>
+        </TouchableOpacity>
+        {loading && <Text>Loading proposals...</Text>}
       </View>
     </View>
   );
@@ -75,7 +102,7 @@ const styles = StyleSheet.create({
   button: {
     width: 300,
     height: 50,
-    backgroundColor: '#3498db', // Örnek bir renk
+    backgroundColor: '#874CCC', // Example color
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
@@ -91,7 +118,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: 'white',
-    fontWeight:"bold",
+    fontWeight: 'bold',
     fontSize: 18,
   },
 });

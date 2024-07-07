@@ -6,17 +6,28 @@ import store from './redux/store';
 import 'react-native-get-random-values';
 import WelcomeScreen from './src/screens/WelcomeScreen';
 import ProposalScreen from './src/screens/ProposalScreen';
+import ProposalDetailScreen from './src/screens/ProposalDetailScreen';
 
+type RootStackParamList = {
+  WelcomeScreen: undefined;
+  ProposalScreen: undefined;
+  ProposalDetailScreen: { title: string; description: string };
+};
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const App: React.FC = () => {
   return (
     <Provider store={store}>
       <NavigationContainer>
-        <Stack.Navigator>
+        <Stack.Navigator initialRouteName="ProposalScreen">
           <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} />
           <Stack.Screen name="ProposalScreen" component={ProposalScreen}/>
+          <Stack.Screen 
+            name="ProposalDetailScreen" 
+            component={ProposalDetailScreen}
+            options={{ title: 'Proposal Details' }}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

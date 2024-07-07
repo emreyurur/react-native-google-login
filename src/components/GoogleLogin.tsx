@@ -21,6 +21,10 @@ const GoogleLogin: React.FC = () => {
       const userInfo = await GoogleSignin.signIn();
       setUserInfo(userInfo);
       console.log("Login successfully!");
+
+      // Send user email to backend
+      await sendUserEmailToBackend(userInfo.user.email);
+
       navigation.navigate('ProposalScreen'); // Giriş başarılı olduğunda yönlendirme yap
     } catch (error: any) {
       if (error.code === statusCodes.SIGN_IN_CANCELLED) {
@@ -36,6 +40,29 @@ const GoogleLogin: React.FC = () => {
         // some other error happened
         console.log('Some other error happened', error);
       }
+    }
+  };
+
+  const sendUserEmailToBackend = async (email: string | null) => {
+    if (!email) {
+      console.error('Email not found');
+      return;
+    }
+    
+    try {
+      const response = await fetch('https://6204-95-12-113-153.ngrok-free.app/mobile/sso', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to send email to backend');
+      }
+      console.log('Email sent to backend successfully');
+    } catch (error) {
+      console.error('Error sending email to backend:', error);
     }
   };
 
